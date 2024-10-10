@@ -1,6 +1,6 @@
 package com.wavemaker.pojo;
 
-public class WordOccurrence {
+public class WordOccurrence implements Comparable<WordOccurrence> {
     private String filePath;
     private String fileName;
     private String word;
@@ -45,5 +45,10 @@ public class WordOccurrence {
 
     public void setPosition(int position) {
         this.position = position;
+    }
+
+    @Override
+    public int compareTo(WordOccurrence o) {
+        return this.fileName.compareToIgnoreCase(o.fileName);
     }
 }

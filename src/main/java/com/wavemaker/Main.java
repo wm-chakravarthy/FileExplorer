@@ -5,6 +5,7 @@ import com.wavemaker.pojo.WordOccurrence;
 import com.wavemaker.service.FileService;
 import com.wavemaker.service.impl.FileServiceImpl;
 
+import java.util.Collections;
 import java.util.List;
 
 public class Main {
@@ -20,10 +21,14 @@ public class Main {
         System.out.println("No. of occurrences of 'l' in the file: " + fileService.getOccurrencesOfACharacter('l'));
         System.out.println("No. of occurrences of 'World' in the file: " + fileService.getOccurrencesOfAWord("World"));
 
-//        printLineNumberAndPosition("World");
+//        printLineNumberAndPosition("hello world");
 
-        List<WordOccurrence> searchResults = fileService.searchWordInDirectoryAndSubdirectoriesAndGetLineNumberAndPosition("World", "/home/chakravarthyb_500380/Documents/Demo");
-
+        List<WordOccurrence> searchResults = fileService.searchWordInDirectoryAndSubdirectoriesAndGetLineNumberAndPosition
+                ("World", "/home/chakravarthyb_500380/Documents/Demo");
+        System.out.println("Before sorting");
+        printSearchResults(searchResults);
+        Collections.sort(searchResults);
+        System.out.println("After sorting");
         printSearchResults(searchResults);
 
 //        printLineNumberAndPositionOfACharacter('l');

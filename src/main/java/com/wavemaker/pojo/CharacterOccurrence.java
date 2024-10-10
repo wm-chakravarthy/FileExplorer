@@ -1,6 +1,6 @@
 package com.wavemaker.pojo;
 
-public class CharacterOccurrence {
+public class CharacterOccurrence implements Comparable<CharacterOccurrence> {
     private String filePath;
     private String fileName;
     private char character;
@@ -46,4 +46,10 @@ public class CharacterOccurrence {
     public void setPosition(int position) {
         this.position = position;
     }
+
+    @Override
+    public int compareTo(CharacterOccurrence other) {
+        return this.fileName.compareToIgnoreCase(other.fileName);
+    }
+
 }

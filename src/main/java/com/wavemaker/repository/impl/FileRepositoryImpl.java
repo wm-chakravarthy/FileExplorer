@@ -43,8 +43,7 @@ public class FileRepositoryImpl implements FileRepository {
 
     /**
      * @param word
-     * @return
-     * Returns the list of line number and position of a word
+     * @return Returns the list of line number and position of a word
      * line and position
      */
     @Override
@@ -54,8 +53,7 @@ public class FileRepositoryImpl implements FileRepository {
 
     /**
      * @param word, takes the word to be searched
-     * @return
-     * returns the list of line number and position of a word in all the files
+     * @return returns the list of line number and position of a word in all the files
      */
     @Override
     public List<WordOccurrence> searchWordInDirectoryAndSubdirectoriesAndGetLineNumberAndPosition(String word, String directoryPath) {

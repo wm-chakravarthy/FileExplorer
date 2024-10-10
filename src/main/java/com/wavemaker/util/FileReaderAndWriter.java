@@ -13,9 +13,8 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 
 public class FileReaderAndWriter {
-    private File file;
-
     private final ExecutorService executorService = ExecutorServiceHandler.getExecutorServiceInstance();
+    private File file;
 
     public FileReaderAndWriter(File file) {
         this.file = file;
@@ -42,11 +41,13 @@ public class FileReaderAndWriter {
         try {
             bufferedReader = new BufferedReader(new FileReader(file));
             String line = bufferedReader.readLine();
+            if (line != null) line = line.toLowerCase();
             while (line != null) {
                 for (char c : line.toCharArray()) {
                     if (c == character) occurrences++;
                 }
                 line = bufferedReader.readLine();
+                if (line != null) line = line.toLowerCase();
             }
             return occurrences;
         } catch (IOException exception) {
@@ -62,6 +63,7 @@ public class FileReaderAndWriter {
         try {
             bufferedReader = new BufferedReader(new FileReader(file));
             String line = bufferedReader.readLine();
+            if (line != null) line = line.toLowerCase();
             int lineNumber = 1;  //initial line number is 1
             while (line != null) {
                 int position = 0;
@@ -79,6 +81,7 @@ public class FileReaderAndWriter {
                     }
                 }
                 line = bufferedReader.readLine();
+                if (line != null) line = line.toLowerCase();
                 lineNumber++;
             }
             return characterOccurrenceList;
@@ -100,12 +103,17 @@ public class FileReaderAndWriter {
         try {
             bufferedReader = new BufferedReader(new FileReader(file));
             String line = bufferedReader.readLine();
+            if (line != null) line = line.toLowerCase();
             while (line != null) {
-                String[] words = line.split("\\s+");
-                for (String w : words) {
-                    if (w.equals(word)) occurrences++;
+                int fromIndex = 0;
+                fromIndex = line.indexOf(word, fromIndex);
+                while (fromIndex != -1) {
+                    occurrences++;
+                    fromIndex++;
+                    fromIndex = line.indexOf(word, fromIndex);
                 }
                 line = bufferedReader.readLine();
+                if (line != null) line = line.toLowerCase();
             }
             return occurrences;
         } catch (IOException exception) {
@@ -121,21 +129,22 @@ public class FileReaderAndWriter {
         try {
             bufferedReader = new BufferedReader(new FileReader(file));
             String line = bufferedReader.readLine();
+            if (line != null) line = line.toLowerCase();
             int lineNumber = 1;  //initial line number is 1
             while (line != null) {
-                int index = 0;
-                String[] words = line.split("\\s+");
-                for (String w : words) {
-                    if (w.equals(word)) {
-                        WordOccurrence wordOccurrence = new WordOccurrence();
-                        wordOccurrence.setFilePath(file.getAbsolutePath());
-                        wordOccurrence.setLineNumber(lineNumber);
-                        wordOccurrence.setPosition(index + 1);
-                        wordOccurrenceList.add(wordOccurrence);
-                    }
-                    index += w.length() + 1;
+                int fromIndex = 0;
+                fromIndex = line.indexOf(word, fromIndex);
+                while (fromIndex != -1) {
+                    WordOccurrence wordOccurrence = new WordOccurrence();
+                    wordOccurrence.setFilePath(file.getAbsolutePath());
+                    wordOccurrence.setLineNumber(lineNumber);
+                    wordOccurrence.setPosition(fromIndex + 1);
+                    wordOccurrenceList.add(wordOccurrence);
+                    fromIndex++;
+                    fromIndex = line.indexOf(word, fromIndex);
                 }
                 line = bufferedReader.readLine();
+                if (line != null) line = line.toLowerCase();
                 lineNumber++;
             }
             return wordOccurrenceList;
@@ -147,7 +156,8 @@ public class FileReaderAndWriter {
     }
 
 
-    public List<WordOccurrence> searchWordInDirectoryAndSubdirectoriesAndGetLineNumberAndPosition(String word, String directoryPath) {
+    public List<WordOccurrence> searchWordInDirectoryAndSubdirectoriesAndGetLineNumberAndPosition
+            (String word, String directoryPath) {
         List<WordOccurrence> wordSearchMap = new LinkedList<>();
         File directory = new File(directoryPath); //directory to be searched
 
@@ -177,23 +187,24 @@ public class FileReaderAndWriter {
         try {
             bufferedReader = new BufferedReader(new FileReader(file));
             String line = bufferedReader.readLine();
+            if (line != null) line = line.toLowerCase();
             int lineNumber = 1;  //initial line number is 1
             while (line != null) {
-                int index = 0;
-                String[] words = line.split("\\s+");
-                for (String w : words) {
-                    if (w.equals(word)) {
-                        WordOccurrence wordOccurrence = new WordOccurrence();
-                        wordOccurrence.setFilePath(file.getAbsolutePath());
-                        wordOccurrence.setFileName(file.getName());
-                        wordOccurrence.setWord(word);
-                        wordOccurrence.setLineNumber(lineNumber);
-                        wordOccurrence.setPosition(index + 1);
-                        wordSearchMap.add(wordOccurrence);
-                    }
-                    index += w.length() + 1;
+                int fromIndex = 0;
+                fromIndex = line.indexOf(word, fromIndex);
+                while (fromIndex != -1) {
+                    WordOccurrence wordOccurrence = new WordOccurrence();
+                    wordOccurrence.setFilePath(file.getAbsolutePath());
+                    wordOccurrence.setWord(word);
+                    wordOccurrence.setFileName(file.getName());
+                    wordOccurrence.setLineNumber(lineNumber);
+                    wordOccurrence.setPosition(fromIndex + 1);
+                    wordSearchMap.add(wordOccurrence);
+                    fromIndex++;
+                    fromIndex = line.indexOf(word, fromIndex);
                 }
                 line = bufferedReader.readLine();
+                if (line != null) line = line.toLowerCase();
                 lineNumber++;
             }
         } catch (IOException exception) {
