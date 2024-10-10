@@ -111,7 +111,7 @@ public class FileReaderAndWriter {
 
 
     public Map<String, List<Map<String, Integer>>> searchWordInDirectoryAndSubdirectoriesAndGetLineNumberAndPosition(String word, String directoryPath) {
-        Map<String, List<Map<String, Integer>>> wordSearchMap = new LinkedHashMap<>();
+        Map<String, List<Map<String, Integer>>> wordSearchMap = null;
 
         File directory = new File(directoryPath); //directory to be searched
 
@@ -127,7 +127,7 @@ public class FileReaderAndWriter {
         if (files != null) {
             for (File file : files) {
                 if (file.isDirectory()) {
-                    searchWordInDirectoryAndSubdirectoriesAndGetLineNumberAndPosition(word, file, wordSearchMap);
+                    new Thread(() -> searchWordInDirectoryAndSubdirectoriesAndGetLineNumberAndPosition(word, file, wordSearchMap)).start();
                 } else if (file.isFile()) {
                     List<Map<String, Integer>> list = getLineNumberAndPositionOfAWord(word, file);
                     wordSearchMap.put(file.getAbsolutePath(), list);
