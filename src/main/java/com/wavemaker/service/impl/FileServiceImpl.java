@@ -1,6 +1,8 @@
 package com.wavemaker.service.impl;
 
 import com.wavemaker.factory.FileRepositoryFactoryInstanceHandler;
+import com.wavemaker.pojo.CharacterOccurrence;
+import com.wavemaker.pojo.WordOccurrence;
 import com.wavemaker.repository.FileRepository;
 import com.wavemaker.service.FileService;
 
@@ -25,6 +27,11 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
+    public List<CharacterOccurrence> getLineNumberAndPositionOfACharacter(char character) {
+        return fileRepository.getLineNumberAndPositionOfACharacter(character);
+    }
+
+    @Override
     public int getOccurrencesOfAWord(String word) {
         return fileRepository.getOccurrencesOfAWord(word);
     }
@@ -36,7 +43,7 @@ public class FileServiceImpl implements FileService {
      * line and position
      */
     @Override
-    public List<Map<String, Integer>> getLineNumberAndPositionOfAWord(String word) {
+    public List<WordOccurrence> getLineNumberAndPositionOfAWord(String word) {
         return fileRepository.getLineNumberAndPositionOfAWord(word);
     }
 
@@ -46,7 +53,7 @@ public class FileServiceImpl implements FileService {
      * returns the list of line number and position of a word in all the files
      */
     @Override
-    public Map<String, List<Map<String, Integer>>> searchWordInDirectoryAndSubdirectoriesAndGetLineNumberAndPosition(String word, String directoryPath) {
+    public List<WordOccurrence> searchWordInDirectoryAndSubdirectoriesAndGetLineNumberAndPosition(String word, String directoryPath) {
         return fileRepository.searchWordInDirectoryAndSubdirectoriesAndGetLineNumberAndPosition(word, directoryPath);
     }
 }

@@ -1,10 +1,11 @@
 package com.wavemaker;
 
+import com.wavemaker.pojo.CharacterOccurrence;
+import com.wavemaker.pojo.WordOccurrence;
 import com.wavemaker.service.FileService;
 import com.wavemaker.service.impl.FileServiceImpl;
 
 import java.util.List;
-import java.util.Map;
 
 public class Main {
 
@@ -19,46 +20,59 @@ public class Main {
         System.out.println("No. of occurrences of 'l' in the file: " + fileService.getOccurrencesOfACharacter('l'));
         System.out.println("No. of occurrences of 'World' in the file: " + fileService.getOccurrencesOfAWord("World"));
 
-        printLineNumberAndPosition("World");
+//        printLineNumberAndPosition("World");
 
-        Map<String, List<Map<String, Integer>>> searchResults = fileService.searchWordInDirectoryAndSubdirectoriesAndGetLineNumberAndPosition("World", "/home/chakravarthyb_500380/Documents/Demo");
+        List<WordOccurrence> searchResults = fileService.searchWordInDirectoryAndSubdirectoriesAndGetLineNumberAndPosition("World", "/home/chakravarthyb_500380/Documents/Demo");
 
         printSearchResults(searchResults);
+
+//        printLineNumberAndPositionOfACharacter('l');
     }
 
     private static void printLineNumberAndPosition(String word) {
-        List<Map<String, Integer>> occurrences = fileService.getLineNumberAndPositionOfAWord(word);
-
-        System.out.println("Occurrences of the word \"" + word + "\":");
-        for (Map<String, Integer> occurrence : occurrences) {
-            int lineNumber = occurrence.get("lineNumber");
-            int position = occurrence.get("position");
-            System.out.println("Line " + lineNumber + ", Position " + position);
+        List<WordOccurrence> wordOccurrenceList = fileService.getLineNumberAndPositionOfAWord(word);
+        if (wordOccurrenceList.isEmpty()) {
+            System.out.println("Word \"" + word + "\" not found.");
+            return;
+        }
+        for (WordOccurrence wordOccurrence : wordOccurrenceList) {
+            int lineNumber = wordOccurrence.getLineNumber();
+            int position = wordOccurrence.getPosition();
+            System.out.println("Word \"" + word + "\" found at line " + lineNumber + ", position " + position + ".");
         }
     }
 
-    private static void printSearchResults(Map<String, List<Map<String, Integer>>> searchResults) {
+    private static void printLineNumberAndPositionOfACharacter(char character) {
+        List<CharacterOccurrence> characterOccurrenceList = fileService.getLineNumberAndPositionOfACharacter(character);
+        if (characterOccurrenceList.isEmpty()) {
+            System.out.println("Character \"" + character + "\" not found.");
+            return;
+        }
+        System.out.println("File Path : " + characterOccurrenceList.getFirst().getFilePath());
+        System.out.println("File Name : " + characterOccurrenceList.getFirst().getFileName());
+        System.out.println("Character : " + characterOccurrenceList.getFirst().getCharacter());
+        System.out.println("Total Number of Occurrences : " + characterOccurrenceList.size());
+        for (CharacterOccurrence characterOccurrence : characterOccurrenceList) {
+            int lineNumber = characterOccurrence.getLineNumber();
+            int position = characterOccurrence.getPosition();
+            System.out.println("Character \"" + character + "\" found at line " + lineNumber + ", position " + position + ".");
+        }
+    }
+
+    private static void printSearchResults(List<WordOccurrence> searchResults) {
         if (searchResults.isEmpty()) {
             System.out.println("No occurrences found.");
             return;
         }
         System.out.println("Word Search Results:");
-        for (Map.Entry<String, List<Map<String, Integer>>> entry : searchResults.entrySet()) {
-            String filePath = entry.getKey();
-            List<Map<String, Integer>> occurrences = entry.getValue();
-
-            System.out.println("\nFile: " + filePath);
-
-            if (occurrences.isEmpty()) {
-                System.out.println("  - No occurrences found in this file.");
-            } else {
-                System.out.println("  - Occurrences:");
-                for (Map<String, Integer> occurrence : occurrences) {
-                    int lineNumber = occurrence.get("lineNumber");
-                    int position = occurrence.get("position");
-                    System.out.printf("    - Line %d, Position %d%n", lineNumber, position);
-                }
-            }
+        System.out.println("Total Occurrences : " + searchResults.size());
+        for (WordOccurrence wordOccurrence : searchResults) {
+            System.out.println();
+            System.out.println("File Path : " + wordOccurrence.getFilePath());
+            System.out.println("File Name : " + wordOccurrence.getFileName());
+            System.out.println("Word : " + wordOccurrence.getWord());
+            System.out.println("Line Number : " + wordOccurrence.getLineNumber());
+            System.out.println("Position : " + wordOccurrence.getPosition());
         }
     }
 

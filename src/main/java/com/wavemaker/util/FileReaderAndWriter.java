@@ -1,14 +1,15 @@
 package com.wavemaker.util;
 
 import com.wavemaker.exception.DirectoryNotFoundException;
+import com.wavemaker.exception.FileReadException;
 import com.wavemaker.exception.FileWriteException;
+import com.wavemaker.pojo.CharacterOccurrence;
+import com.wavemaker.pojo.WordOccurrence;
 import com.wavemaker.service.impl.ExecutorServiceHandler;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ExecutorService;
 
 public class FileReaderAndWriter {
@@ -55,6 +56,39 @@ public class FileReaderAndWriter {
         }
     }
 
+    public List<CharacterOccurrence> getLineNumberAndPositionOfACharacter(char character) {
+        List<CharacterOccurrence> characterOccurrenceList = new LinkedList<>();
+        BufferedReader bufferedReader = null;
+        try {
+            bufferedReader = new BufferedReader(new FileReader(file));
+            String line = bufferedReader.readLine();
+            int lineNumber = 1;  //initial line number is 1
+            while (line != null) {
+                int position = 0;
+                for (char c : line.toCharArray()) {
+                    position++;
+                    if (c == character) {
+                        CharacterOccurrence characterOccurrence = new CharacterOccurrence();
+                        characterOccurrence.setFilePath(file.getAbsolutePath());
+                        characterOccurrence.setFileName(file.getName());
+                        characterOccurrence.setCharacter(character);
+                        characterOccurrence.setLineNumber(lineNumber);
+                        characterOccurrence.setPosition(position);
+
+                        characterOccurrenceList.add(characterOccurrence);
+                    }
+                }
+                line = bufferedReader.readLine();
+                lineNumber++;
+            }
+            return characterOccurrenceList;
+        } catch (IOException exception) {
+            throw new FileReadException("An error occurred while reading content from file: " + file.getAbsolutePath(), 500);
+        } finally {
+            closeBufferedReader(bufferedReader);
+        }
+    }
+
     /**
      * @param word
      * @return Returns the list of line number and position of a word
@@ -67,7 +101,7 @@ public class FileReaderAndWriter {
             bufferedReader = new BufferedReader(new FileReader(file));
             String line = bufferedReader.readLine();
             while (line != null) {
-                String[] words = line.split(" ");
+                String[] words = line.split("\\s+");
                 for (String w : words) {
                     if (w.equals(word)) occurrences++;
                 }
@@ -81,27 +115,30 @@ public class FileReaderAndWriter {
         }
     }
 
-    public List<Map<String, Integer>> getLineNumberAndPositionOfAWord(String word) {
-        List<Map<String, Integer>> list = new ArrayList<>();
+    public List<WordOccurrence> addWordOccurrencesFromFile(String word) {
+        List<WordOccurrence> wordOccurrenceList = new LinkedList<>();
         BufferedReader bufferedReader = null;
         try {
             bufferedReader = new BufferedReader(new FileReader(file));
             String line = bufferedReader.readLine();
             int lineNumber = 1;  //initial line number is 1
             while (line != null) {
-                String[] words = line.split(" ");
-                for (int i = 0; i < words.length; i++) {
-                    if (words[i].equals(word)) {
-                        Map<String, Integer> map = new LinkedHashMap<>();
-                        map.put("lineNumber", lineNumber);
-                        map.put("position", i + 1);
-                        list.add(map);
+                int index = 0;
+                String[] words = line.split("\\s+");
+                for (String w : words) {
+                    if (w.equals(word)) {
+                        WordOccurrence wordOccurrence = new WordOccurrence();
+                        wordOccurrence.setFilePath(file.getAbsolutePath());
+                        wordOccurrence.setLineNumber(lineNumber);
+                        wordOccurrence.setPosition(index + 1);
+                        wordOccurrenceList.add(wordOccurrence);
                     }
+                    index += w.length() + 1;
                 }
                 line = bufferedReader.readLine();
                 lineNumber++;
             }
-            return list;
+            return wordOccurrenceList;
         } catch (IOException exception) {
             throw new FileWriteException("An error occurred while reading content from file: " + file.getAbsolutePath(), 500);
         } finally {
@@ -110,54 +147,55 @@ public class FileReaderAndWriter {
     }
 
 
-    public Map<String, List<Map<String, Integer>>> searchWordInDirectoryAndSubdirectoriesAndGetLineNumberAndPosition(String word, String directoryPath) {
-        Map<String, List<Map<String, Integer>>> wordSearchMap = null;
-
+    public List<WordOccurrence> searchWordInDirectoryAndSubdirectoriesAndGetLineNumberAndPosition(String word, String directoryPath) {
+        List<WordOccurrence> wordSearchMap = new LinkedList<>();
         File directory = new File(directoryPath); //directory to be searched
 
         checkIfDirectoryExists(directory);  //checks if directory exists
 
-        wordSearchMap = searchWordInDirectoryAndSubdirectoriesAndGetLineNumberAndPosition(word, directory, wordSearchMap);
+        searchWordInDirectoryAndSubdirectoriesAndGetLineNumberAndPosition(word, directory, wordSearchMap);
+
         return wordSearchMap;
     }
 
-    private Map<String, List<Map<String, Integer>>> searchWordInDirectoryAndSubdirectoriesAndGetLineNumberAndPosition
-            (String word, File directory, Map<String, List<Map<String, Integer>>> wordSearchMap) {
+    private void searchWordInDirectoryAndSubdirectoriesAndGetLineNumberAndPosition
+            (String word, File directory, List<WordOccurrence> wordSearchMap) {
         File[] files = directory.listFiles();
         if (files != null) {
             for (File file : files) {
                 if (file.isDirectory()) {
-                    new Thread(() -> searchWordInDirectoryAndSubdirectoriesAndGetLineNumberAndPosition(word, file, wordSearchMap)).start();
+                    searchWordInDirectoryAndSubdirectoriesAndGetLineNumberAndPosition(word, file, wordSearchMap);
                 } else if (file.isFile()) {
-                    List<Map<String, Integer>> list = getLineNumberAndPositionOfAWord(word, file);
-                    wordSearchMap.put(file.getAbsolutePath(), list);
+                    addWordOccurrencesFromFile(word, file, wordSearchMap);
                 }
             }
         }
-        return wordSearchMap;
     }
 
-    private List<Map<String, Integer>> getLineNumberAndPositionOfAWord(String word, File file) {
-        List<Map<String, Integer>> list = new ArrayList<>();
+    private void addWordOccurrencesFromFile(String word, File file, List<WordOccurrence> wordSearchMap) {
         BufferedReader bufferedReader = null;
         try {
             bufferedReader = new BufferedReader(new FileReader(file));
             String line = bufferedReader.readLine();
             int lineNumber = 1;  //initial line number is 1
             while (line != null) {
-                String[] words = line.split(" ");
-                for (int i = 0; i < words.length; i++) {
-                    if (words[i].equals(word)) {
-                        Map<String, Integer> map = new LinkedHashMap<>();
-                        map.put("lineNumber", lineNumber);
-                        map.put("position", i + 1);
-                        list.add(map);
+                int index = 0;
+                String[] words = line.split("\\s+");
+                for (String w : words) {
+                    if (w.equals(word)) {
+                        WordOccurrence wordOccurrence = new WordOccurrence();
+                        wordOccurrence.setFilePath(file.getAbsolutePath());
+                        wordOccurrence.setFileName(file.getName());
+                        wordOccurrence.setWord(word);
+                        wordOccurrence.setLineNumber(lineNumber);
+                        wordOccurrence.setPosition(index + 1);
+                        wordSearchMap.add(wordOccurrence);
                     }
+                    index += w.length() + 1;
                 }
                 line = bufferedReader.readLine();
                 lineNumber++;
             }
-            return list;
         } catch (IOException exception) {
             throw new FileWriteException("An error occurred while reading content from file: " + file.getAbsolutePath(), 500);
         } finally {
