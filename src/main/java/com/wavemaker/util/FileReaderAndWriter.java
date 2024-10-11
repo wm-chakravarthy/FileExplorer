@@ -14,32 +14,28 @@ import java.util.concurrent.ExecutorService;
 
 public class FileReaderAndWriter {
     private final ExecutorService executorService = ExecutorServiceHandler.getExecutorServiceInstance();
-    private File file;
+    private final File file;
 
     public FileReaderAndWriter(File file) {
         this.file = file;
     }
 
     public boolean writeContent(String content) {
-        BufferedWriter bufferedWriter = null;
-        try {
-            bufferedWriter = new BufferedWriter(new FileWriter(file, true));
+        try (FileWriter fileWriter = new FileWriter(file);
+             BufferedWriter bufferedWriter = new BufferedWriter(fileWriter)) {
             bufferedWriter.write(content);
             bufferedWriter.newLine();
             bufferedWriter.flush();
             return true;
         } catch (IOException exception) {
             throw new FileWriteException("An error occurred while writing content to file: " + file.getAbsolutePath(), 500);
-        } finally {
-            closeBufferedWriter(bufferedWriter);
         }
     }
 
+
     public int getOccurrencesOfACharacter(char character) {
         int occurrences = 0;
-        BufferedReader bufferedReader = null;
-        try {
-            bufferedReader = new BufferedReader(new FileReader(file));
+        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(file))) {
             String line = bufferedReader.readLine();
             if (line != null) line = line.toLowerCase();
             while (line != null) {
@@ -52,16 +48,12 @@ public class FileReaderAndWriter {
             return occurrences;
         } catch (IOException exception) {
             throw new FileWriteException("An error occurred while reading content from file: " + file.getAbsolutePath(), 500);
-        } finally {
-            closeBufferedReader(bufferedReader);
         }
     }
 
     public List<CharacterOccurrence> getLineNumberAndPositionOfACharacter(char character) {
         List<CharacterOccurrence> characterOccurrenceList = new LinkedList<>();
-        BufferedReader bufferedReader = null;
-        try {
-            bufferedReader = new BufferedReader(new FileReader(file));
+        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(file))) {
             String line = bufferedReader.readLine();
             if (line != null) line = line.toLowerCase();
             int lineNumber = 1;  //initial line number is 1
@@ -87,8 +79,6 @@ public class FileReaderAndWriter {
             return characterOccurrenceList;
         } catch (IOException exception) {
             throw new FileReadException("An error occurred while reading content from file: " + file.getAbsolutePath(), 500);
-        } finally {
-            closeBufferedReader(bufferedReader);
         }
     }
 
@@ -99,9 +89,7 @@ public class FileReaderAndWriter {
      */
     public int getOccurrencesOfAWord(String word) {
         int occurrences = 0;
-        BufferedReader bufferedReader = null;
-        try {
-            bufferedReader = new BufferedReader(new FileReader(file));
+        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(file))) {
             String line = bufferedReader.readLine();
             if (line != null) line = line.toLowerCase();
             while (line != null) {
@@ -118,16 +106,12 @@ public class FileReaderAndWriter {
             return occurrences;
         } catch (IOException exception) {
             throw new FileWriteException("An error occurred while reading content from file: " + file.getAbsolutePath(), 500);
-        } finally {
-            closeBufferedReader(bufferedReader);
         }
     }
 
     public List<WordOccurrence> addWordOccurrencesFromFile(String word) {
         List<WordOccurrence> wordOccurrenceList = new LinkedList<>();
-        BufferedReader bufferedReader = null;
-        try {
-            bufferedReader = new BufferedReader(new FileReader(file));
+        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(file))) {
             String line = bufferedReader.readLine();
             if (line != null) line = line.toLowerCase();
             int lineNumber = 1;  //initial line number is 1
@@ -150,8 +134,6 @@ public class FileReaderAndWriter {
             return wordOccurrenceList;
         } catch (IOException exception) {
             throw new FileWriteException("An error occurred while reading content from file: " + file.getAbsolutePath(), 500);
-        } finally {
-            closeBufferedReader(bufferedReader);
         }
     }
 
@@ -170,22 +152,24 @@ public class FileReaderAndWriter {
 
     private void searchWordInDirectoryAndSubdirectoriesAndGetLineNumberAndPosition
             (String word, File directory, List<WordOccurrence> wordSearchMap) {
-        File[] files = directory.listFiles();
-        if (files != null) {
-            for (File file : files) {
-                if (file.isDirectory()) {
-                    searchWordInDirectoryAndSubdirectoriesAndGetLineNumberAndPosition(word, file, wordSearchMap);
-                } else if (file.isFile()) {
-                    addWordOccurrencesFromFile(word, file, wordSearchMap);
+        try {
+            File[] files = directory.listFiles();
+            if (files != null) {
+                for (File file : files) {
+                    if (file.isDirectory()) {
+                        searchWordInDirectoryAndSubdirectoriesAndGetLineNumberAndPosition(word, file, wordSearchMap);
+                    } else if (file.isFile()) {
+                        addWordOccurrencesFromFile(word, file, wordSearchMap);
+                    }
                 }
             }
+        } catch (SecurityException exception) {
+            throw new FileReadException("An error occurred while reading content from file: " + file.getAbsolutePath(), 500);
         }
     }
 
     private void addWordOccurrencesFromFile(String word, File file, List<WordOccurrence> wordSearchMap) {
-        BufferedReader bufferedReader = null;
-        try {
-            bufferedReader = new BufferedReader(new FileReader(file));
+        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(file))) {
             String line = bufferedReader.readLine();
             if (line != null) line = line.toLowerCase();
             int lineNumber = 1;  //initial line number is 1
@@ -209,34 +193,12 @@ public class FileReaderAndWriter {
             }
         } catch (IOException exception) {
             throw new FileWriteException("An error occurred while reading content from file: " + file.getAbsolutePath(), 500);
-        } finally {
-            closeBufferedReader(bufferedReader);
         }
     }
 
     private void checkIfDirectoryExists(File directoryPath) {
         if (!directoryPath.exists() || !directoryPath.isDirectory()) {
             throw new DirectoryNotFoundException("Directory not found: " + directoryPath.getAbsolutePath(), 500);
-        }
-    }
-
-    private void closeBufferedWriter(BufferedWriter writer) {
-        if (writer != null) {
-            try {
-                writer.close();
-            } catch (IOException e) {
-                System.err.println("Failed to close the writer: " + e.getMessage());
-            }
-        }
-    }
-
-    private void closeBufferedReader(BufferedReader reader) {
-        if (reader != null) {
-            try {
-                reader.close();
-            } catch (IOException e) {
-                System.err.println("Failed to close the reader: " + e.getMessage());
-            }
         }
     }
 }
